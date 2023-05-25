@@ -42,12 +42,16 @@ pub mod pallet {
     pub enum Event<T: Config> {
         /// Event emitted when a book is archived
         BookArchived { who: T::AccountId },
+        /// Event emmitted when a book's url is is retrived
+        BookUrlRetrieved { who: T::AccountId, url: Vec<u8>}, 
     }
 
     #[pallet::error]
     pub enum Error<T> {
         /// Book already exist in archive
         BookAlreadyExistInArchive,
+        /// Book does not exist in archive
+        BookDoesNotExistInArchive,
     }
 
     /// Book summary
@@ -78,7 +82,7 @@ pub mod pallet {
     // Dispatchable functions must be annotated with a weight and must return a DispatchResult.
     #[pallet::call]
     impl<T: Config> Pallet<T> {
-        #[pallet::weight(0)]
+        #[pallet::weight(1_000_000)]
         #[pallet::call_index(1)]
         pub fn archive_book(
             origin: OriginFor<T>,
@@ -94,14 +98,14 @@ pub mod pallet {
 			let author = author.to_ascii_lowercase();
 
             // Create book pre-signature
-            let pre_signature = format!(
+            let pre_image = format!(
                 "{:?}{:?}",
                 title,
                 author,
             );
 
             // Get book hash
-            let book_hash = T::Hashing::hash(&pre_signature.as_bytes());
+            let book_hash = T::Hashing::hash(&pre_image.as_bytes());
 
             // Verify that title and author have not already been stored
             ensure!(
@@ -124,8 +128,48 @@ pub mod pallet {
             // Store book summary in archive
             ArchiveStore::<T>::insert(&book_hash, book_summary);
 
-            // Emit an event that the claim was created.
+            // Emit an event that the book was archived.
             Self::deposit_event(Event::BookArchived { who: sender });
+
+            Ok(())
+        }
+
+        #[pallet::weight(1_000_000)]
+        #[pallet::call_index(2)]
+        pub fn retrieve_book_url(
+            origin: OriginFor<T>,
+            title: Vec<u8>,
+            author: Vec<u8>,
+        ) -> DispatchResult {
+            // Check that the extrinsic was signed and get the signer.
+            // This function will return an error if the extrinsic is not signed.
+            let sender = ensure_signed(origin)?;
+
+			let title = title.to_ascii_lowercase();
+			let author = author.to_ascii_lowercase();
+
+            // Create book pre-signature
+            let pre_image = format!(
+                "{:?}{:?}",
+                title,
+                author,
+            );
+
+            // Get book hash
+            let book_hash = T::Hashing::hash(&pre_image.as_bytes());
+
+            // Verify that book have been archived
+            ensure!(
+                ArchiveStore::<T>::contains_key(&book_hash),
+                Error::<T>::BookDoesNotExistInArchive
+            );
+
+            // Get url of a book
+            let book_summary = ArchiveStore::<T>::get(&book_hash).unwrap();
+            let book_url = book_summary.url;
+
+            // Emit an event that the book's url was retrieved.
+            Self::deposit_event(Event::BookUrlRetrieved { who: sender, url: book_url });
 
             Ok(())
         }
