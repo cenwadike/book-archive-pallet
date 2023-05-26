@@ -12,6 +12,7 @@
 //! ### Dispatchable functions
 //!
 //! * `archive_book(orgin, title, author, url, archiver, timestamp)` - Archive a specified book
+//! * `ret
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -92,7 +93,7 @@ pub mod pallet {
         ) -> DispatchResult {
             // Check that the extrinsic was signed and get the signer.
             // This function will return an error if the extrinsic is not signed.
-            let sender = ensure_signed(origin)?;
+            let signer = ensure_signed(origin)?;
 
 			let title = title.to_ascii_lowercase();
 			let author = author.to_ascii_lowercase();
@@ -121,7 +122,7 @@ pub mod pallet {
                 title,
                 author,
                 url,
-                archiver: sender.clone(),
+                archiver: signer.clone(),
                 timestamp: current_block,
             };
 
@@ -129,7 +130,7 @@ pub mod pallet {
             ArchiveStore::<T>::insert(&book_hash, book_summary);
 
             // Emit an event that the book was archived.
-            Self::deposit_event(Event::BookArchived { who: sender });
+            Self::deposit_event(Event::BookArchived { who: signer });
 
             Ok(())
         }
@@ -143,7 +144,7 @@ pub mod pallet {
         ) -> DispatchResult {
             // Check that the extrinsic was signed and get the signer.
             // This function will return an error if the extrinsic is not signed.
-            let sender = ensure_signed(origin)?;
+            let signer = ensure_signed(origin)?;
 
 			let title = title.to_ascii_lowercase();
 			let author = author.to_ascii_lowercase();
@@ -169,7 +170,7 @@ pub mod pallet {
             let book_url = book_summary.url;
 
             // Emit an event that the book's url was retrieved.
-            Self::deposit_event(Event::BookUrlRetrieved { who: sender, url: book_url });
+            Self::deposit_event(Event::BookUrlRetrieved { who: signer, url: book_url });
 
             Ok(())
         }

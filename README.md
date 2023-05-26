@@ -1,5 +1,5 @@
 # book-archive
-simple implementation of a book archiver using substrate framework
+simple implementation of a book archiver pallet using substrate framework
 
 ## develop
 
@@ -11,18 +11,24 @@ ensure that you have the rust toolchain installed
 ### build pallet
 - Clone the project [repository](https://github.com/cenwadike/book-archive-pallet).
 
-```rust
+```bash
 git clone https://github.com/cenwadike/book-archive-pallet.git
 ```
 
 - Navigate into the project’s directory.
 
-```rust
+```bash
 cd book-archive-pallet
 ```
 
-- Run the command below to compile the node.
+- Run the command below to compile the pallet.
 
-```rust
+```bash
+cargo test
+```
+
+- Run the command below to compile the pallet.
+
+```bash
 cargo build --release
 ```
