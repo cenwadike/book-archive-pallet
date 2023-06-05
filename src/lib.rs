@@ -12,12 +12,18 @@
 //! ### Dispatchable functions
 //!
 //! * `archive_book(orgin, title, author, url, archiver, timestamp)` - Archive a specified book
-//! * `ret
+//! * `retrieve_book_url(origin, title, author)` - Retrieve url of a book if it exist in the archive
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
 // Re-export pallet items so that they can be accessed from the crate namespace.
 pub use pallet::*;
+
+#[cfg(test)]
+mod mock;
+
+#[cfg(test)]
+mod tests;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -44,7 +50,7 @@ pub mod pallet {
         /// Event emitted when a book is archived
         BookArchived { who: T::AccountId },
         /// Event emmitted when a book's url is is retrived
-        BookUrlRetrieved { who: T::AccountId, url: Vec<u8>}, 
+        BookUrlRetrieved { who: T::AccountId, url: Vec<u8> },
     }
 
     #[pallet::error]
@@ -70,6 +76,7 @@ pub mod pallet {
     /// Maps a book hash to book summary
     /// Book hash is Blake2 hash of book title and author
     #[pallet::storage]
+    #[pallet::getter(fn archive_store)]
     pub(super) type ArchiveStore<T: Config> = StorageMap<
         _,
         Blake2_128Concat,
@@ -95,15 +102,11 @@ pub mod pallet {
             // This function will return an error if the extrinsic is not signed.
             let signer = ensure_signed(origin)?;
 
-			let title = title.to_ascii_lowercase();
-			let author = author.to_ascii_lowercase();
+            let title = title.to_ascii_lowercase();
+            let author = author.to_ascii_lowercase();
 
             // Create book pre-signature
-            let pre_image = format!(
-                "{:?}{:?}",
-                title,
-                author,
-            );
+            let pre_image = format!("{:?}{:?}", title, author,);
 
             // Get book hash
             let book_hash = T::Hashing::hash(&pre_image.as_bytes());
@@ -146,15 +149,11 @@ pub mod pallet {
             // This function will return an error if the extrinsic is not signed.
             let signer = ensure_signed(origin)?;
 
-			let title = title.to_ascii_lowercase();
-			let author = author.to_ascii_lowercase();
+            let title = title.to_ascii_lowercase();
+            let author = author.to_ascii_lowercase();
 
             // Create book pre-signature
-            let pre_image = format!(
-                "{:?}{:?}",
-                title,
-                author,
-            );
+            let pre_image = format!("{:?}{:?}", title, author,);
 
             // Get book hash
             let book_hash = T::Hashing::hash(&pre_image.as_bytes());
@@ -170,7 +169,10 @@ pub mod pallet {
             let book_url = book_summary.url;
 
             // Emit an event that the book's url was retrieved.
-            Self::deposit_event(Event::BookUrlRetrieved { who: signer, url: book_url });
+            Self::deposit_event(Event::BookUrlRetrieved {
+                who: signer,
+                url: book_url,
+            });
 
             Ok(())
         }
