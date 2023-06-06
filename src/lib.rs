@@ -64,9 +64,9 @@ pub mod pallet {
     /// Book summary
     #[derive(Clone, Encode, Decode, Default, Eq, PartialEq, RuntimeDebug, TypeInfo)]
     pub struct BookSummary<AccountId, BlockNumber> {
-        title: Vec<u8>,         // title of book
-        author: Vec<u8>,        // author of book
-        url: Vec<u8>,           // web url to off-chain storage
+        pub title: Vec<u8>,     // title of book
+        pub author: Vec<u8>,    // author of book
+        pub url: Vec<u8>,       // web url to off-chain storage
         archiver: AccountId,    // account id of archiver
         timestamp: BlockNumber, // time when book was archived
     }
