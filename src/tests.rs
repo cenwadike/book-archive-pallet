@@ -1,28 +1,5 @@
 use crate::mock::*;
-use frame_support::traits::schedule::MaybeHashed;
-use frame_support::Blake2_256;
 use frame_support::{assert_ok, traits::Hash};
-
-fn archive_book(title: &str, author: &str, url: &str, archiver: u64) -> Hash {
-    let title = title.to_lowercase().as_bytes().to_vec();
-    let author = author.to_lowercase().as_bytes().to_vec();
-    let url = url.to_lowercase().as_bytes().to_vec();
-
-    assert_ok!(TemplateModule::archive_book(
-        RuntimeOrigin::signed(archiver),
-        title.clone(),
-        author.clone(),
-        url,
-    ));
-
-    // Create book pre-signature
-    let pre_image = format!("{:?}{:?}", title, author,);
-    // Return book hash
-    // let hash = Hash::from_slice(&pre_image.as_bytes());
-    let hash = Hash::from_slice(&pre_image.as_str().as_bytes().to_vec());
-
-    hash.into()
-}
 
 #[test]
 fn archive_book_works() {
