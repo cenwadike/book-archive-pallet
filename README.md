@@ -1,5 +1,5 @@
 # book-archive
-simple implementation of a book archiver pallet using substrate framework
+implementation of a book archiver pallet using substrate framework
 
 ## develop
 
