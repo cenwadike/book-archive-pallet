@@ -12,7 +12,9 @@
 //! ### Dispatchable functions
 //!
 //! * `archive_book(orgin, title, author, url, archiver, timestamp)` - Archive a specified book
-//! * `retrieve_book_url(origin, title, author)` - Retrieve url of a book if it exist in the archive
+//!
+//! ### RPC endpoints
+//! * `book_summary( hash(title + author) )` - Retrieve book summary from the archive
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -76,7 +78,7 @@ pub mod pallet {
     /// Maps a book hash to book summary
     /// Book hash is Blake2 hash of book title and author
     #[pallet::storage]
-    #[pallet::getter(fn archive_store)]
+    #[pallet::getter(fn book_summary)]
     pub(super) type ArchiveStore<T: Config> = StorageMap<
         _,
         Blake2_128Concat,
@@ -110,6 +112,7 @@ pub mod pallet {
 
             // Get book hash
             let book_hash = T::Hashing::hash(&pre_image.as_bytes());
+            // let book_hash = T::Hashing::hash(&pre_image.as_bytes());
 
             // Verify that title and author have not already been stored
             ensure!(
@@ -134,45 +137,6 @@ pub mod pallet {
 
             // Emit an event that the book was archived.
             Self::deposit_event(Event::BookArchived { who: signer });
-
-            Ok(())
-        }
-
-        #[pallet::weight(1_000_000)]
-        #[pallet::call_index(2)]
-        pub fn retrieve_book_url(
-            origin: OriginFor<T>,
-            title: Vec<u8>,
-            author: Vec<u8>,
-        ) -> DispatchResult {
-            // Check that the extrinsic was signed and get the signer.
-            // This function will return an error if the extrinsic is not signed.
-            let signer = ensure_signed(origin)?;
-
-            let title = title.to_ascii_lowercase();
-            let author = author.to_ascii_lowercase();
-
-            // Create book pre-signature
-            let pre_image = format!("{:?}{:?}", title, author,);
-
-            // Get book hash
-            let book_hash = T::Hashing::hash(&pre_image.as_bytes());
-
-            // Verify that book have been archived
-            ensure!(
-                ArchiveStore::<T>::contains_key(&book_hash),
-                Error::<T>::BookDoesNotExistInArchive
-            );
-
-            // Get url of a book
-            let book_summary = ArchiveStore::<T>::get(&book_hash).unwrap();
-            let book_url = book_summary.url;
-
-            // Emit an event that the book's url was retrieved.
-            Self::deposit_event(Event::BookUrlRetrieved {
-                who: signer,
-                url: book_url,
-            });
 
             Ok(())
         }

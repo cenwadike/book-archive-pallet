@@ -1,5 +1,7 @@
 use crate::mock::*;
-use frame_support::{assert_ok, traits::Hash};
+use frame_support::assert_ok;
+use sp_core::Blake2Hasher;
+use sp_core::Hasher;
 
 #[test]
 fn archive_book_works() {
@@ -15,11 +17,10 @@ fn archive_book_works() {
             url.clone(),
         ));
 
-        let pre_image: String = format!("{:?}{:?}", title, author);
-        let digest: &[u8] = pre_image.as_bytes().into();
-        let hash: Hash = Hash::from_slice(&digest.to_vec()).into();
+        let data: String = format!("{:?}{:?}", title, author);
+        let hash = Blake2Hasher::hash(data.as_bytes());
 
-        let stored_book_summary = TemplateModule::archive_store(hash).unwrap();
+        let stored_book_summary = TemplateModule::book_summary(hash).unwrap();
         assert_eq!(stored_book_summary.url, url);
     });
 }
