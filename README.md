@@ -21,7 +21,7 @@ git clone https://github.com/cenwadike/book-archive-pallet.git
 cd book-archive-pallet
 ```
 
-- Run the command below to compile the pallet.
+- Run the command below to test the pallet.
 
 ```bash
 cargo test
