@@ -10,7 +10,7 @@ fn archive_book_works() {
         let author: Vec<u8> = "author".into();
         let url: Vec<u8> = "url".into();
 
-        assert_ok!(TemplateModule::archive_book(
+        assert_ok!(ArchiverPallet::archive_book(
             RuntimeOrigin::signed(1),
             title.clone(),
             author.clone(),
@@ -20,7 +20,7 @@ fn archive_book_works() {
         let data: String = format!("{:?}{:?}", title, author);
         let hash = Blake2Hasher::hash(data.as_bytes());
 
-        let stored_book_summary = TemplateModule::book_summary(hash).unwrap();
+        let stored_book_summary = ArchiverPallet::book_summary(hash).unwrap();
         assert_eq!(stored_book_summary.url, url);
     });
 }

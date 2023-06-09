@@ -13,7 +13,7 @@
 //!
 //! * `archive_book(orgin, title, author, url, archiver, timestamp)` - Archive a specified book
 //!
-//! ### RPC endpoints
+//! ### RPC query endpoints
 //! * `book_summary( hash(title + author) )` - Retrieve book summary from the archive
 
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -112,7 +112,6 @@ pub mod pallet {
 
             // Get book hash
             let book_hash = T::Hashing::hash(&pre_image.as_bytes());
-            // let book_hash = T::Hashing::hash(&pre_image.as_bytes());
 
             // Verify that title and author have not already been stored
             ensure!(
