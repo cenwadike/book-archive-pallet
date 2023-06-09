@@ -51,16 +51,12 @@ pub mod pallet {
     pub enum Event<T: Config> {
         /// Event emitted when a book is archived
         BookArchived { who: T::AccountId },
-        /// Event emmitted when a book's url is is retrived
-        BookUrlRetrieved { who: T::AccountId, url: Vec<u8> },
     }
 
     #[pallet::error]
     pub enum Error<T> {
         /// Book already exist in archive
         BookAlreadyExistInArchive,
-        /// Book does not exist in archive
-        BookDoesNotExistInArchive,
     }
 
     /// Book summary
