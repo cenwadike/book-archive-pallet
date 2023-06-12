@@ -5,7 +5,7 @@ use sp_core::Hasher;
 
 #[test]
 fn archive_book_works() {
-    new_test_env().execute_with(|| {
+    new_test_ext().execute_with(|| {
         let title: Vec<u8> = "title".into();
         let author: Vec<u8> = "author".into();
         let url: Vec<u8> = "url".into();

@@ -14,6 +14,7 @@
 //! * `archive_book(orgin, title, author, url, archiver, timestamp)` - Archive a specified book
 //!
 //! ### RPC query endpoints
+//!
 //! * `book_summary( hash(title + author) )` - Retrieve book summary from the archive
 
 #![cfg_attr(not(feature = "std"), no_std)]
