@@ -2,7 +2,7 @@
 name = "pallet-archiver"
 version = "4.0.0-dev"
 description = "FRAME pallet template for defining custom runtime logic."
-authors = ["Substrate DevHub <https://github.com/substrate-developer-hub>"]
+authors = ["Substrate DevHub <https://github.com/substrate-developer-hub>", "cenwadike <cenwadike@gmail.com>"]
 homepage = "https://substrate.io"
 edition = "2021"
 license = "MIT"
@@ -30,7 +30,7 @@ sp-runtime = { version = "7.0.0", git = "https://github.com/paritytech/substrate
 default = ["std"]
 std = [
 	"codec/std",
-	"frame-benchmarking?/std",
+	"frame-benchmarking/std",
 	"frame-support/std",
 	"frame-system/std",
 	"scale-info/std",

@@ -28,6 +28,11 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
+#[cfg(test)]
+mod benchmarking;
+pub mod weights;
+pub use weights::*;
+
 #[frame_support::pallet]
 pub mod pallet {
     use frame_support::inherent::Vec;

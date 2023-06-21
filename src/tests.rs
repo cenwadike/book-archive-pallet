@@ -17,7 +17,7 @@ fn archive_book_works() {
             url.clone(),
         ));
 
-        let data: String = format!("{:?}{:?}", title, author);
+        let data = format!("{:?}{:?}", title, author);
         let hash = Blake2Hasher::hash(data.as_bytes());
 
         let stored_book_summary = ArchiverPallet::book_summary(hash).unwrap();
