@@ -4426,11 +4426,27 @@ dependencies = [
  "frame-benchmarking-cli",
  "frame-support 4.0.0-dev",
  "frame-system 4.0.0-dev",
+ "pallet-balances",
  "parity-scale-codec",
  "scale-info",
  "sp-core 7.0.0",
  "sp-io 7.0.0",
  "sp-runtime 7.0.0",
+]
+
+[[package]]
+name = "pallet-balances"
+version = "4.0.0-dev"
+source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.40#98f2e3451c9143278ec53c6718940aeabcd3b68a"
+dependencies = [
+ "frame-benchmarking 4.0.0-dev",
+ "frame-support 4.0.0-dev",
+ "frame-system 4.0.0-dev",
+ "log",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-runtime 7.0.0",
+ "sp-std 5.0.0",
 ]
 
 [[package]]

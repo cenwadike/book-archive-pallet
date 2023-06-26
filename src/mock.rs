@@ -1,4 +1,5 @@
 use crate as pallet_archiver;
+use frame_support::{parameter_types, PalletId};
 use frame_system as system;
 use sp_core::H256;
 use sp_core::{ConstU16, ConstU64};
@@ -18,6 +19,7 @@ frame_support::construct_runtime!(
         UncheckedExtrinsic = UncheckedExtrinsic,
     {
         System: frame_system,
+        Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
         ArchiverPallet: pallet_archiver,
     }
 );
@@ -49,8 +51,25 @@ impl system::Config for Test {
     type MaxConsumers = frame_support::traits::ConstU32<16>;
 }
 
+impl pallet_balances::Config for Test {
+    type MaxLocks = ();
+    type MaxReserves = ();
+    type ReserveIdentifier = [u8; 8];
+    type Balance = u64;
+    type RuntimeEvent = RuntimeEvent;
+    type DustRemoval = ();
+    type ExistentialDeposit = ConstU64<1>;
+    type AccountStore = System;
+    type WeightInfo = ();
+}
+
+parameter_types! {
+    pub const ArchiverPalletId: PalletId = PalletId(*b"archiver");
+}
 impl pallet_archiver::Config for Test {
     type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type PalletId: ArchiverPalletId;
 }
 
 // Build genesis storage according to the mock runtime.
