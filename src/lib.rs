@@ -30,19 +30,19 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-#[cfg(test)]
+#[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
+pub mod weights;
+pub use weights::*;
 
 #[frame_support::pallet]
 pub mod pallet {
+    use super::*;
     use frame_support::inherent::Vec;
     use frame_support::pallet_prelude::*;
     use frame_support::sp_runtime::traits::Hash;
-    use frame_support::traits::{Currency, ReservableCurrency};
-    use frame_support::PalletId;
     use frame_system::pallet_prelude::*;
     use scale_info::prelude::format;
-    use sp_runtime::traits::AccountIdConversion;
 
     #[pallet::pallet]
     #[pallet::without_storage_info]
@@ -53,16 +53,22 @@ pub mod pallet {
     pub trait Config: frame_system::Config {
         /// Because this pallet emits events, it depends on the runtime's definition of an event.
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-        /// Trait for handling fungible tokens
-        type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
-        /// Pallet ID.
-        #[pallet::constant]
-        type PalletId: Get<PalletId>;
+        /// Type representing the weight of this pallet
+        type WeightInfo: WeightInfo;
     }
 
-    // Pallet derived account id
-    #[pallet::storage]
-    pub(super) type PalletAccountId<T: Config> = StorageValue<_, T::AccountId, OptionQuery>;
+    #[pallet::event]
+    #[pallet::generate_deposit(pub(super) fn deposit_event)]
+    pub enum Event<T: Config> {
+        /// Event emitted when a book is archived
+        BookArchived { who: T::AccountId },
+    }
+
+    #[pallet::error]
+    pub enum Error<T> {
+        /// Book already exist in archive
+        BookAlreadyExistInArchive,
+    }
 
     /// Book summary
     #[derive(Clone, Encode, Decode, Default, Eq, PartialEq, RuntimeDebug, TypeInfo)]
@@ -70,7 +76,6 @@ pub mod pallet {
         pub title: Vec<u8>,     // title of book
         pub author: Vec<u8>,    // author of book
         pub url: Vec<u8>,       // web url to off-chain storage
-        pub royalty_paid: u32,  // amount of token paid as royalty
         archiver: AccountId,    // account id of archiver
         timestamp: BlockNumber, // time when book was archived
     }
@@ -89,33 +94,13 @@ pub mod pallet {
         OptionQuery,
     >;
 
-    #[pallet::event]
-    #[pallet::generate_deposit(pub(super) fn deposit_event)]
-    pub enum Event<T: Config> {
-        /// Event emitted when a book is archived
-        BookArchived { who: T::AccountId },
-        /// Event emitted when royalty is paid to book archiver
-        RoyaltyReserved {
-            sender: T::AccountId,
-            receiver: T::AccountId,
-        },
-    }
-
-    #[pallet::error]
-    pub enum Error<T> {
-        /// Book already exist in archive
-        BookAlreadyExistInArchive,
-        /// Book does not exist in archive
-        BookDoesNotExistInArchive,
-    }
-
     // Dispatchable functions allow users to interact with the pallet and invoke state changes.
     // These functions materialize as "extrinsics", which are often compared to transactions.
     // Dispatchable functions must be annotated with a weight and must return a DispatchResult.
     #[pallet::call]
     impl<T: Config> Pallet<T> {
-        #[pallet::weight(100_000_000)]
         #[pallet::call_index(1)]
+        #[pallet::weight(T::WeightInfo::archive_book())]
         pub fn archive_book(
             origin: OriginFor<T>,
             title: Vec<u8>,
@@ -149,7 +134,6 @@ pub mod pallet {
                 title,
                 author,
                 url,
-                royalty_paid: 0,
                 archiver: signer.clone(),
                 timestamp: current_block,
             };
@@ -161,84 +145,6 @@ pub mod pallet {
             Self::deposit_event(Event::BookArchived { who: signer });
 
             Ok(())
-        }
-
-        #[pallet::weight(100_000_000)]
-        #[pallet::call_index(2)]
-        pub fn pay_royalty(
-            origin: OriginFor<T>,
-            title: Vec<u8>,
-            author: Vec<u8>,
-            deposit: u32,
-        ) -> DispatchResult {
-            // Extrinsic must be signed by payee
-            let signer = ensure_signed(origin)?;
-
-            // royalty must be greater than zero
-            assert!(deposit > 0, "Error: Deposit must be greater than zero");
-
-            let title = title.to_ascii_lowercase();
-            let author = author.to_ascii_lowercase();
-
-            // Compute book hash key
-            let pre_image = format!("{:?}{:?}", title, author);
-            let book_hash = T::Hashing::hash(&pre_image.as_bytes());
-
-            // Verify that book exist in archive
-            ensure!(
-                ArchiveStore::<T>::contains_key(&book_hash),
-                Error::<T>::BookDoesNotExistInArchive
-            );
-
-            // Get book summary from archive
-            let book_summary = ArchiveStore::<T>::get(&book_hash).unwrap();
-
-            // Update royalty for book
-            let book_summary = BookSummary {
-                title: book_summary.title,
-                author: book_summary.author,
-                url: book_summary.url,
-                royalty_paid: book_summary.royalty_paid.checked_add(deposit).unwrap(),
-                archiver: book_summary.archiver,
-                timestamp: book_summary.timestamp,
-            };
-
-            // Store book summary in archive
-            ArchiveStore::<T>::insert(&book_hash, book_summary.clone());
-
-            // reserve deposit for archiver
-            // initialize pallet account id if account id is not initialized
-            match PalletAccountId::<T>::get() {
-                Some(_) => {
-                    // reserve deposit
-                    T::Currency::reserve(&signer, deposit.into())
-                        .expect("Error: Failed to reserve royalty for archiver");
-                }
-                None => {
-                    //
-                    Self::pallet_account_id();
-                    // reserve deposit
-                    T::Currency::reserve(&signer, deposit.into())
-                        .expect("Error: Failed to reserve royalty for archiver");
-                }
-            }
-
-            // Emit an event that the book was archived.
-            Self::deposit_event(Event::RoyaltyReserved {
-                sender: signer,
-                receiver: book_summary.archiver,
-            });
-
-            Ok(())
-        }
-    }
-
-    impl<T: Config> Pallet<T> {
-        // generate pallet account id
-        pub fn pallet_account_id() -> T::AccountId {
-            let pallet_account_id: T::AccountId = T::PalletId::get().into_account_truncating();
-            PalletAccountId::<T>::put(pallet_account_id.clone());
-            pallet_account_id
         }
     }
 }
