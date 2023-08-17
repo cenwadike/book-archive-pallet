@@ -4,12 +4,9 @@ implementation of a book archiver pallet using Substrate framework
 ## Overview
 This pallet allows an account to archive a book by providing a URL to an item.
 
-Royalty can be paid to the account that achieved an item.
-
 ### Dispatchable 
 
 * `archive_book(orgin, title, author, url, archiver, timestamp)` - Archive a specified book
-* `pay_royalty ( hash(title + author) )` - Pay royalty to archiver
 
 ### RPC 
 * `book_summary( hash(title + author) )` - Retrieve book summary from the archive
